@@ -1,141 +1,230 @@
-.main {
-  overflow-x: hidden;
-  background: rgb(45, 45, 45);
-}
-
-.spacer {
-  height: 100vh;
-  width: 100%;
-}
-
-.gallery {
-  height: 175vh;
-  background: rgb(45, 45, 45);
+.container {
   position: relative;
-  display: flex;
-  gap: 2vw;
-  padding: 2vw;
-  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh;
+  background: #252323;
+  padding: 200px 2rem 100px;
+}
+
+.grid {
+  position: relative;
+  margin: 0 auto;
+  max-width: 1200px;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background: #252323;
+    opacity: 1;
+    transition: opacity 0.3s;
+  }
+
+  &.loaded {
+    opacity: 1;
+
+    &::after {
+      opacity: 0;
+    }
+  }
+}
+
+.gridItem {
+  width: 270px;
+  padding: 10px;
+  display: inline-block;
+  vertical-align: top;
+
+  &.current {
+    opacity: 0 !important;
+  }
+}
+
+.imgWrap {
+  display: block;
+  position: relative;
   overflow: hidden;
+  transition: transform 0.3s ease;
 
-  .column {
-    position: relative;
-    height: 100%; // Important: columns need full height
-    width: 25%;
-    min-width: 250px;
-    display: flex;
-    flex-direction: column;
-    gap: 2vw;
-    will-change: transform;
+  &:hover {
+    transform: translateY(-5px);
+  }
 
-    // Initial positioning - crucial for parallax effect
-    &.column1 {
-      top: -45%;
-    }
+  &:focus {
+    outline: 2px solid #77d45b;
+  }
 
-    &.column2 {
-      top: -95%;
-    }
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform 0.3s ease;
+  }
 
-    &.column3 {
-      top: -45%;
-    }
-
-    &.column4 {
-      top: -75%;
-    }
-
-    .imageContainer {
-      height: 100%;
-      width: 100%;
-      position: relative;
-      border-radius: 1vw;
-      overflow: hidden;
-
-      img {
-        object-fit: cover;
-        transition: transform 0.3s ease;
-      }
-
-      &:hover img {
-        transform: scale(1.05);
-      }
-    }
+  &:hover img {
+    transform: scale(1.05);
   }
 }
 
-// Responsive design
-@media (max-width: 1024px) {
-  .gallery {
-    gap: 1.5vw;
-    padding: 1.5vw;
+.description {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
 
-    .column {
-      min-width: 200px;
-      gap: 1.5vw;
-    }
+  .imgWrap:hover & {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
+.preview {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+
+  &.open {
+    pointer-events: auto;
+    opacity: 1;
+  }
+
+  img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+}
+
+.closeBtn {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 1010;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+
+  &:focus {
+    outline: 2px solid #77d45b;
+  }
+}
+
+.previewDescription {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1010;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 300;
+  text-align: center;
+  padding: 1rem 2rem;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 2rem;
+  backdrop-filter: blur(10px);
+  max-width: 80%;
+}
+
+// Responsive Design
 @media (max-width: 768px) {
-  .gallery {
-    gap: 1vw;
-    padding: 1vw;
-    height: 150vh;
+  .container {
+    padding: 1rem 0.5rem;
+  }
 
-    .column {
-      width: 50%;
-      min-width: 150px;
-      gap: 1vw;
+  .gridItem {
+    width: calc(50% - 10px);
+    padding: 5px;
+  }
 
-      // Hide last two columns on mobile
-      &.column3,
-      &.column4 {
-        display: none;
-      }
+  .closeBtn {
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
 
-      // Adjust initial positions for mobile
-      &.column1 {
-        top: -35%;
-      }
-
-      &.column2 {
-        top: -65%;
-      }
-
-      .imageContainer {
-        border-radius: 2vw;
-      }
-    }
+  .previewDescription {
+    bottom: 1rem;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
   }
 }
 
 @media (max-width: 480px) {
-  .spacer {
-    height: 70vh;
+  .gridItem {
+    width: 100%;
+    padding: 5px 0;
   }
+}
 
-  .gallery {
-    height: 120vh;
-    gap: 0.5vw;
-    padding: 0.5vw;
+// Enhanced animations
+.grid {
+  .gridItem {
+    transform: translateY(20px);
+    opacity: 0;
+    animation: fadeInUp 0.6s ease forwards;
 
-    .column {
-      width: 50%;
-      min-width: 0;
-      gap: 0.5vw;
-
-      &.column1 {
-        top: -25%;
-      }
-
-      &.column2 {
-        top: -45%;
-      }
-
-      .imageContainer {
-        border-radius: 3vw;
+    @for $i from 1 through 20 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{$i * 0.1}s;
       }
     }
+  }
+
+  &.loaded .gridItem {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

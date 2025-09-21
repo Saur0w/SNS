@@ -4,7 +4,7 @@ import styles from './style.module.scss';
 import Link from 'next/link';
 import {gsap} from "gsap";
 import {useGSAP} from '@gsap/react';
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useRef, useState, JSX} from 'react';
 
 gsap.registerPlugin(useGSAP);
 
@@ -28,7 +28,6 @@ export default function Header(): JSX.Element {
         const tl = gsap.timeline();
 
         if (isActive) {
-
             tl.to(menuTextRef.current, {
                 opacity: 0,
                 duration: 0.3,
@@ -51,7 +50,6 @@ export default function Header(): JSX.Element {
                     ease: "back.out(1.2)"
                 }, "-=0.4");
         } else {
-
             tl.to(navContentRef.current, {
                 y: -20,
                 opacity: 1,
@@ -75,7 +73,9 @@ export default function Header(): JSX.Element {
                 }, "-=0.2");
         }
 
-        return () => tl.kill();
+        return (): void => {
+            tl.kill();
+        };
     }, [isActive]);
 
     return (

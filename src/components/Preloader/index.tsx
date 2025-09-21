@@ -11,8 +11,10 @@ export default function Preloader() {
     const preloaderRef = useRef<HTMLElement>(null);
 
     useGSAP(() => {
-        gsap.to('.preloader', {
-
+        gsap.to(preloaderRef.current, {
+            height: "0vh",
+            duration: 0.8,
+            ease: "power1.inOut"
         });
     }, {
         scope: preloaderRef

@@ -1,220 +1,159 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import {useRef, useState, JSX} from 'react';
 import styles from './style.module.scss';
-import Image from 'next/image';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from '@gsap/react';
+import {gsap} from 'gsap';
+import {ScrollTrigger} from "gsap/ScrollTrigger";
+import {useGSAP} from '@gsap/react';
 import Lenis from '@studio-freight/lenis';
-import { forwardRef } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import GridFx from './GridFx';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-const images = [
-    "image1.jpg",
-    "image2.jpg",
-    "image3.jpg",
-    "image4.jpg",
-    "image5.jpg",
-    "image6.jpg",
-    "image7.jpg",
-    "image8.jpg",
-    "image9.jpg",
-    "image10.jpg",
-    "image11.jpg",
-    "image12.jpg"
-];
-
-interface ColumnProps {
-    images: string[];
-    index: number;
+interface ImageItem {
+    id: number;
+    src: string;
+    thumb: string;
+    title: string;
+    size: string;
 }
 
-const Column = forwardRef<HTMLDivElement, ColumnProps>(
-    ({ images, index }, ref) => {
-        return (
-            <div ref={ref} className={`${styles.column} ${styles[`column${index}`]}`}>
-                {images.map((src: string, i: number) => (
-                    <div key={i} className={styles.imageContainer}>
-                        <Image
-                            src={`/images/${src}`}
-                            alt="image"
-                            fill
-                            sizes="(max-width: 768px) 50vw, 25vw"
-                            priority={i === 0}
-                        />
-                    </div>
-                ))}
-            </div>
-        );
+const imageData: ImageItem[] = [
+    {
+        id: 1,
+        src: 'https://picsum.photos/1280/853?random=1',
+        thumb: 'https://picsum.photos/270/200?random=1',
+        title: 'Assemblage',
+        size: '1280x853'
+    },
+    {
+        id: 2,
+        src: 'https://picsum.photos/958/1280?random=2',
+        thumb: 'https://picsum.photos/270/360?random=2',
+        title: 'Demesne',
+        size: '958x1280'
+    },
+    {
+        id: 3,
+        src: 'https://picsum.photos/837/1280?random=3',
+        thumb: 'https://picsum.photos/270/390?random=3',
+        title: 'Felicity',
+        size: '837x1280'
+    },
+    {
+        id: 4,
+        src: 'https://picsum.photos/1280/961?random=4',
+        thumb: 'https://picsum.photos/270/250?random=4',
+        title: 'Propinquity',
+        size: '1280x961'
+    },
+    {
+        id: 5,
+        src: 'https://picsum.photos/1280/1131?random=5',
+        thumb: 'https://picsum.photos/270/300?random=5',
+        title: 'Ephemeral',
+        size: '1280x1131'
+    },
+    {
+        id: 6,
+        src: 'https://picsum.photos/1280/857?random=6',
+        thumb: 'https://picsum.photos/270/230?random=6',
+        title: 'Surreptitious',
+        size: '1280x857'
+    },
+    {
+        id: 7,
+        src: 'https://picsum.photos/1280/1280?random=7',
+        thumb: 'https://picsum.photos/270/270?random=7',
+        title: 'Scintilla',
+        size: '1280x1280'
+    },
+    {
+        id: 8,
+        src: 'https://picsum.photos/1280/853?random=8',
+        thumb: 'https://picsum.photos/270/200?random=8',
+        title: 'Vestigial',
+        size: '1280x853'
     }
-);
+];
 
-Column.displayName = "Column";
 
-export default function Landing() {
-    const galleryRef = useRef<HTMLDivElement>(null);
-    const [dimension, setDimension] = useState<{width: number, height: number}>({
-        width: 0,
-        height: 0
-    });
+export default function Landing(): JSX.Element {
 
-    const column1Ref = useRef<HTMLDivElement>(null);
-    const column2Ref = useRef<HTMLDivElement>(null);
-    const column3Ref = useRef<HTMLDivElement>(null);
-    const column4Ref = useRef<HTMLDivElement>(null);
+    const gridRef = useRef<HTMLDivElement>(null);
+    const previewRef = useRef<HTMLDivElement>(null);
+    const [isLoaded, setIsLoaded] = useState(false);
 
-    useEffect(() => {
-        const lenis = new Lenis({
-            duration: 1.2,
-            easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            direction: 'vertical',
-            gestureDirection: 'vertical',
-            smooth: true,
-            smoothTouch: false,
-            touchMultiplier: 2
+    useGSAP(() => {
+        if (!gridRef.current || !previewRef.current) return;
+
+        // Initialize the grid effect
+        const gridFx = new GridFx(gridRef.current, {
+            onInit: () => {
+                setIsLoaded(true);
+            },
+            onOpenItem: (item: HTMLElement) => {
+                // Custom GSAP animations when opening
+                gsap.fromTo(previewRef.current,
+                    { opacity: 0 },
+                    { opacity: 1, duration: 0.4, ease: "power2.out" }
+                );
+            },
+            onCloseItem: () => {
+                // Custom GSAP animations when closing
+                gsap.to(previewRef.current,
+                    { opacity: 0, duration: 0.3, ease: "power2.in" }
+                );
+            }
         });
 
-        lenis.on('scroll', ScrollTrigger.update);
-
-        const rafCallback = (time: number) => {
-            lenis.raf(time * 1000);
-        };
-
-        gsap.ticker.add(rafCallback);
-        gsap.ticker.lagSmoothing(0);
-
-        const resize = (): void => {
-            setDimension({
-                width: window.innerWidth,
-                height: window.innerHeight
-            });
-        };
-
-        window.addEventListener("resize", resize);
-        resize();
-
         return () => {
-            window.removeEventListener("resize", resize);
-            lenis.destroy();
-            gsap.ticker.remove(rafCallback);
+            // Cleanup if needed
+            gridFx.destroy?.();
         };
     }, []);
 
-    useGSAP(() => {
-        if (!galleryRef.current || dimension.height === 0) return;
-
-        const { height } = dimension;
-
-        // Kill any existing ScrollTriggers for these elements
-        ScrollTrigger.getAll().forEach(trigger => {
-            if (trigger.vars.trigger === galleryRef.current) {
-                trigger.kill();
-            }
-        });
-
-        // Column 1 - moves less (multiplier: 2)
-        gsap.fromTo(column1Ref.current,
-            {
-                y: 0
-            },
-            {
-                y: height * 2,
-                ease: "none",
-                scrollTrigger: {
-                    trigger: galleryRef.current,
-                    start: "top bottom",
-                    end: "bottom top",
-                    scrub: true,
-                    invalidateOnRefresh: true
-                }
-            }
-        );
-
-        // Column 2 - moves more (multiplier: 3.3)
-        gsap.fromTo(column2Ref.current,
-            {
-                y: 0
-            },
-            {
-                y: height * 3.3,
-                ease: "none",
-                scrollTrigger: {
-                    trigger: galleryRef.current,
-                    start: "top bottom",
-                    end: "bottom top",
-                    scrub: true,
-                    invalidateOnRefresh: true
-                }
-            }
-        );
-
-        // Column 3 - moves least (multiplier: 1.25)
-        gsap.fromTo(column3Ref.current,
-            {
-                y: 0
-            },
-            {
-                y: height * 1.25,
-                ease: "none",
-                scrollTrigger: {
-                    trigger: galleryRef.current,
-                    start: "top bottom",
-                    end: "bottom top",
-                    scrub: true,
-                    invalidateOnRefresh: true
-                }
-            }
-        );
-
-        // Column 4 - moves a lot (multiplier: 3)
-        gsap.fromTo(column4Ref.current,
-            {
-                y: 0
-            },
-            {
-                y: height * 3,
-                ease: "none",
-                scrollTrigger: {
-                    trigger: galleryRef.current,
-                    start: "top bottom",
-                    end: "bottom top",
-                    scrub: true,
-                    invalidateOnRefresh: true
-                }
-            }
-        );
-
-        ScrollTrigger.refresh();
-
-    }, [dimension]);
-
     return (
-        <main className={styles.main}>
-            <div ref={galleryRef} className={styles.gallery}>
-                <Column
-                    ref={column1Ref}
-                    images={[images[0], images[1], images[2]]}
-                    index={1}
-                />
-                <Column
-                    ref={column2Ref}
-                    images={[images[3], images[4], images[5]]}
-                    index={2}
-                />
-                <Column
-                    ref={column3Ref}
-                    images={[images[6], images[7], images[8]]}
-                    index={3}
-                />
-                <Column
-                    ref={column4Ref}
-                    images={[images[9], images[10]]}
-                    index={4}
-                />
+        <div className={styles.container}>
+            <div
+                ref={gridRef}
+                className={`${styles.grid} ${isLoaded ? styles.loaded : ''}`}
+            >
+                {imageData.map((item, index) => (
+                    <div
+                        key={item.id}
+                        className={styles.gridItem}
+                        data-size={item.size}
+                        data-href={item.src}
+                    >
+                        <Link href={item.src} className={styles.imgWrap}>
+                            <Image
+                                src={item.thumb}
+                                alt={item.title}
+                                width={270}
+                                height={200}
+                                style={{
+                                width: '100%',
+                                height: 'auto',
+                            }}
+                                />
+                            <div className={styles.description}>
+                                {item.title}
+                            </div>
+                        </Link>
+                    </div>
+                ))}
             </div>
-            <div className={styles.spacer}></div>
-        </main>
+
+            <div ref={previewRef} className={styles.preview}>
+                <button className={styles.closeBtn} type="button">
+                    <span>X</span>
+                </button>
+                <div className={styles.previewDescription}></div>
+            </div>
+        </div>
+
     );
 }
