@@ -1,0 +1,141 @@
+.main {
+  overflow-x: hidden;
+  background: rgb(45, 45, 45);
+}
+
+.spacer {
+  height: 100vh;
+  width: 100%;
+}
+
+.gallery {
+  height: 175vh;
+  background: rgb(45, 45, 45);
+  position: relative;
+  display: flex;
+  gap: 2vw;
+  padding: 2vw;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  .column {
+    position: relative;
+    height: 100%; // Important: columns need full height
+    width: 25%;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 2vw;
+    will-change: transform;
+
+    // Initial positioning - crucial for parallax effect
+    &.column1 {
+      top: -45%;
+    }
+
+    &.column2 {
+      top: -95%;
+    }
+
+    &.column3 {
+      top: -45%;
+    }
+
+    &.column4 {
+      top: -75%;
+    }
+
+    .imageContainer {
+      height: 100%;
+      width: 100%;
+      position: relative;
+      border-radius: 1vw;
+      overflow: hidden;
+
+      img {
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+
+      &:hover img {
+        transform: scale(1.05);
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 1024px) {
+  .gallery {
+    gap: 1.5vw;
+    padding: 1.5vw;
+
+    .column {
+      min-width: 200px;
+      gap: 1.5vw;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .gallery {
+    gap: 1vw;
+    padding: 1vw;
+    height: 150vh;
+
+    .column {
+      width: 50%;
+      min-width: 150px;
+      gap: 1vw;
+
+      // Hide last two columns on mobile
+      &.column3,
+      &.column4 {
+        display: none;
+      }
+
+      // Adjust initial positions for mobile
+      &.column1 {
+        top: -35%;
+      }
+
+      &.column2 {
+        top: -65%;
+      }
+
+      .imageContainer {
+        border-radius: 2vw;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .spacer {
+    height: 70vh;
+  }
+
+  .gallery {
+    height: 120vh;
+    gap: 0.5vw;
+    padding: 0.5vw;
+
+    .column {
+      width: 50%;
+      min-width: 0;
+      gap: 0.5vw;
+
+      &.column1 {
+        top: -25%;
+      }
+
+      &.column2 {
+        top: -45%;
+      }
+
+      .imageContainer {
+        border-radius: 3vw;
+      }
+    }
+  }
+}
