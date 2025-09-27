@@ -2,7 +2,7 @@
   height: 100vh;
   width: 100vw;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
   background-color: #f1efe7;
   visibility: hidden;
 
@@ -20,8 +20,21 @@
     padding: 100px 100px 0;
     row-gap: 1.5rem;
 
-    scrollbar-width: none;
+    // Complete cross-browser scrollbar hiding
+    scrollbar-width: none; // Firefox
+    -ms-overflow-style: none; // IE and Edge
+
+    // Webkit browsers (Chrome, Safari, Edge)
     &::-webkit-scrollbar {
+      display: none;
+    }
+
+    // Additional webkit scrollbar components (just to be sure)
+    &::-webkit-scrollbar-track {
+      display: none;
+    }
+
+    &::-webkit-scrollbar-thumb {
       display: none;
     }
 
@@ -40,5 +53,24 @@
         transform-origin: left;
       }
     }
+  }
+}
+
+// Global scrollbar hiding (if needed for the whole page)
+html {
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE and Edge
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome, Safari
+  }
+}
+
+body {
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE and Edge
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome, Safari
   }
 }

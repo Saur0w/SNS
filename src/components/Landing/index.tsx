@@ -113,7 +113,7 @@ const img: ImageData[] = [
     },
     {
         id: 20,
-        src: '/images/image21.jpg',
+        src: '/images/image20.jpg',
         alt: 'image 21',
     },
     {
@@ -219,7 +219,6 @@ export default function Landing() {
             }
         });
 
-        // Add smooth horizontal scrolling
         const getScrollAmount = () => {
             const containerWidth = container.scrollWidth;
             const viewportWidth = window.innerWidth;
