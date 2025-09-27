@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {gsap} from "gsap";
 import {useGSAP} from '@gsap/react';
 import {useEffect, useRef, useState, JSX} from 'react';
+import { usePathname } from 'next/navigation';
 
 gsap.registerPlugin(useGSAP);
 
@@ -16,6 +17,9 @@ export default function Header(): JSX.Element {
     const closeTextRef = useRef<HTMLParagraphElement>(null);
 
     const [isActive, setIsActive] = useState<boolean>(false);
+    const pathname = usePathname();
+
+    const isAdminPage = pathname?.startsWith('/admin');
 
     useGSAP(() => {
         gsap.set(navigationRef.current, { height: 0, overflow: "hidden" });
@@ -79,7 +83,10 @@ export default function Header(): JSX.Element {
     }, [isActive]);
 
     return (
-        <section className={styles.header} ref={headerRef}>
+        <section
+            className={`${styles.header} ${isAdminPage ? styles.adminHeader : ''}`}
+            ref={headerRef}
+        >
             <div className={styles.bar}>
                 <Link href="/">
                     SNS

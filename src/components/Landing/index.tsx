@@ -1,159 +1,274 @@
 "use client";
 
-import {useRef, useState, JSX} from 'react';
 import styles from './style.module.scss';
-import {gsap} from 'gsap';
-import {ScrollTrigger} from "gsap/ScrollTrigger";
-import {useGSAP} from '@gsap/react';
-import Lenis from '@studio-freight/lenis';
-import Link from 'next/link';
+import { useRef } from 'react';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Image from 'next/image';
-import GridFx from './GridFx';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-interface ImageItem {
+interface ImageData {
     id: number;
     src: string;
-    thumb: string;
-    title: string;
-    size: string;
+    alt: string;
 }
 
-const imageData: ImageItem[] = [
+const img: ImageData[] = [
     {
         id: 1,
-        src: 'https://picsum.photos/1280/853?random=1',
-        thumb: 'https://picsum.photos/270/200?random=1',
-        title: 'Assemblage',
-        size: '1280x853'
+        src: '/images/image1.jpg',
+        alt: 'image 1',
     },
     {
         id: 2,
-        src: 'https://picsum.photos/958/1280?random=2',
-        thumb: 'https://picsum.photos/270/360?random=2',
-        title: 'Demesne',
-        size: '958x1280'
+        src: '/images/image2.jpg',
+        alt: 'image 2',
     },
     {
         id: 3,
-        src: 'https://picsum.photos/837/1280?random=3',
-        thumb: 'https://picsum.photos/270/390?random=3',
-        title: 'Felicity',
-        size: '837x1280'
+        src: '/images/image3.jpg',
+        alt: 'image 3',
     },
     {
         id: 4,
-        src: 'https://picsum.photos/1280/961?random=4',
-        thumb: 'https://picsum.photos/270/250?random=4',
-        title: 'Propinquity',
-        size: '1280x961'
+        src: '/images/image4.jpg',
+        alt: 'image 4',
     },
     {
         id: 5,
-        src: 'https://picsum.photos/1280/1131?random=5',
-        thumb: 'https://picsum.photos/270/300?random=5',
-        title: 'Ephemeral',
-        size: '1280x1131'
+        src: '/images/image5.jpg',
+        alt: 'image 5',
     },
     {
         id: 6,
-        src: 'https://picsum.photos/1280/857?random=6',
-        thumb: 'https://picsum.photos/270/230?random=6',
-        title: 'Surreptitious',
-        size: '1280x857'
+        src: '/images/image6.jpg',
+        alt: 'image 6',
     },
     {
         id: 7,
-        src: 'https://picsum.photos/1280/1280?random=7',
-        thumb: 'https://picsum.photos/270/270?random=7',
-        title: 'Scintilla',
-        size: '1280x1280'
+        src: '/images/image7.jpg',
+        alt: 'image 7',
     },
     {
         id: 8,
-        src: 'https://picsum.photos/1280/853?random=8',
-        thumb: 'https://picsum.photos/270/200?random=8',
-        title: 'Vestigial',
-        size: '1280x853'
+        src: '/images/image8.jpg',
+        alt: 'image 8',
+    },
+    {
+        id: 9,
+        src: '/images/image9.jpg',
+        alt: 'image 9',
+    },
+    {
+        id: 10,
+        src: '/images/image10.jpg',
+        alt: 'image 10',
+    },
+    {
+        id: 11,
+        src: '/images/image11.jpg',
+        alt: 'image 11',
+    },
+    {
+        id: 12,
+        src: '/images/image12.jpg',
+        alt: 'image 12',
+    },
+    {
+        id: 13,
+        src: '/images/image13.jpg',
+        alt: 'image 13'
+    },
+    {
+        id: 14,
+        src: '/images/image14.jpg',
+        alt: 'image 14'
+    },
+    {
+        id: 15,
+        src: '/images/image15.jpg',
+        alt: 'image 15'
+    },
+    {
+        id: 16,
+        src: '/images/image16.jpg',
+        alt: 'image 16'
+    },
+    {
+        id: 17,
+        src: '/images/image17.jpg',
+        alt: 'image 17',
+    },
+    {
+        id: 18,
+        src: '/images/image18.jpg',
+        alt: 'image 18',
+    },
+    {
+        id: 19,
+        src: '/images/image19.jpg',
+        alt: 'image 19',
+    },
+    {
+        id: 20,
+        src: '/images/image21.jpg',
+        alt: 'image 21',
+    },
+    {
+        id: 21,
+        src: '/images/image21.jpg',
+        alt: 'image 5 (duplicate)',
+    },
+    {
+        id: 22,
+        src: '/images/image22.jpg',
+        alt: 'image 6 (duplicate)',
+    },
+    {
+        id: 23,
+        src: '/images/image23.jpg',
+        alt: 'image 7 (duplicate)',
+    },
+    {
+        id: 24,
+        src: '/images/image24.jpg',
+        alt: 'image 8 (duplicate)',
+    },
+    {
+        id: 25,
+        src: '/images/image25.jpg',
+        alt: 'image 9 (duplicate)',
+    },
+    {
+        id: 26,
+        src: '/images/image26.jpg',
+        alt: 'image 10 (duplicate)',
+    },
+    {
+        id: 27,
+        src: '/images/image27.jpg',
+        alt: 'image 11 (duplicate)',
+    },
+    {
+        id: 28,
+        src: '/images/image28.jpg',
+        alt: 'image 12 (duplicate)',
+    },
+    {
+        id: 29,
+        src: '/images/image29.jpg',
+        alt: 'image 13 (duplicate)'
+    },
+    {
+        id: 30,
+        src: '/images/image30.jpg',
+        alt: 'image 14 (duplicate)'
+    },
+    {
+        id: 31,
+        src: '/images/Preloader.jpeg',
+        alt: 'Preloader image'
+    },
+    {
+        id: 32,
+        src: '/images/Portrait.jpg',
+        alt: 'Portrait image'
     }
 ];
 
+export default function Landing() {
+    const landingRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-export default function Landing(): JSX.Element {
-
-    const gridRef = useRef<HTMLDivElement>(null);
-    const previewRef = useRef<HTMLDivElement>(null);
-    const [isLoaded, setIsLoaded] = useState(false);
+    const addToRefs = (el: HTMLDivElement | null, index: number) => {
+        if (el && !imageRefs.current[index]) {
+            imageRefs.current[index] = el;
+        }
+    };
 
     useGSAP(() => {
-        if (!gridRef.current || !previewRef.current) return;
+        const container = containerRef.current;
+        const landing = landingRef.current;
 
-        // Initialize the grid effect
-        const gridFx = new GridFx(gridRef.current, {
-            onInit: () => {
-                setIsLoaded(true);
-            },
-            onOpenItem: (item: HTMLElement) => {
-                // Custom GSAP animations when opening
-                gsap.fromTo(previewRef.current,
-                    { opacity: 0 },
-                    { opacity: 1, duration: 0.4, ease: "power2.out" }
-                );
-            },
-            onCloseItem: () => {
-                // Custom GSAP animations when closing
-                gsap.to(previewRef.current,
-                    { opacity: 0, duration: 0.3, ease: "power2.in" }
-                );
+        if (!container || !landing) return;
+
+        // Set initial visibility
+        gsap.set(landing, {
+            visibility: "visible"
+        });
+
+        // Your original entrance animations - kept exactly the same
+        gsap.from(container, {
+            xPercent: -100,
+            duration: 1.5,
+            ease: "power2.out"
+        });
+
+        imageRefs.current.forEach((imageWrapper, index) => {
+            if (imageWrapper) {
+                gsap.from(imageWrapper, {
+                    xPercent: 100,
+                    scale: 1.3,
+                    duration: 1.5,
+                    delay: index * 0.1,
+                    ease: "power2.out"
+                });
             }
         });
 
-        return () => {
-            // Cleanup if needed
-            gridFx.destroy?.();
+        // Add smooth horizontal scrolling
+        const getScrollAmount = () => {
+            const containerWidth = container.scrollWidth;
+            const viewportWidth = window.innerWidth;
+            return -(containerWidth - viewportWidth);
         };
-    }, []);
+
+        // Only add horizontal scroll if content overflows
+        setTimeout(() => { // Small delay to ensure container has proper width
+            if (container.scrollWidth > window.innerWidth) {
+                const horizontalTween = gsap.to(container, {
+                    x: getScrollAmount,
+                    duration: 3,
+                    ease: "none"
+                });
+
+                ScrollTrigger.create({
+                    trigger: landing,
+                    start: "top top",
+                    end: () => `+=${Math.abs(getScrollAmount())}`,
+                    pin: true,
+                    animation: horizontalTween,
+                    scrub: 1,
+                    invalidateOnRefresh: true,
+                    anticipatePin: 1
+                });
+            }
+        }, 100);
+
+    }, { scope: landingRef });
 
     return (
-        <div className={styles.container}>
-            <div
-                ref={gridRef}
-                className={`${styles.grid} ${isLoaded ? styles.loaded : ''}`}
-            >
-                {imageData.map((item, index) => (
+        <section className={styles.landing} ref={landingRef}>
+            <div className={styles.container} ref={containerRef}>
+                {img.map((image, index) => (
                     <div
-                        key={item.id}
-                        className={styles.gridItem}
-                        data-size={item.size}
-                        data-href={item.src}
+                        key={image.id}
+                        className={styles.imageWrapper}
+                        ref={(el) => addToRefs(el, index)}
                     >
-                        <Link href={item.src} className={styles.imgWrap}>
-                            <Image
-                                src={item.thumb}
-                                alt={item.title}
-                                width={270}
-                                height={200}
-                                style={{
-                                width: '100%',
-                                height: 'auto',
-                            }}
-                                />
-                            <div className={styles.description}>
-                                {item.title}
-                            </div>
-                        </Link>
+                        <Image
+                            src={image.src}
+                            alt={image.alt}
+                            width={220}
+                            height={80}
+                            priority={image.id <= 2}
+                        />
                     </div>
                 ))}
             </div>
-
-            <div ref={previewRef} className={styles.preview}>
-                <button className={styles.closeBtn} type="button">
-                    <span>X</span>
-                </button>
-                <div className={styles.previewDescription}></div>
-            </div>
-        </div>
-
+        </section>
     );
 }
