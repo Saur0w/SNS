@@ -56,21 +56,4 @@
   }
 }
 
-// Global scrollbar hiding (if needed for the whole page)
-html {
-  scrollbar-width: none; // Firefox
-  -ms-overflow-style: none; // IE and Edge
 
-  &::-webkit-scrollbar {
-    display: none; // Chrome, Safari
-  }
-}
-
-body {
-  scrollbar-width: none; // Firefox
-  -ms-overflow-style: none; // IE and Edge
-
-  &::-webkit-scrollbar {
-    display: none; // Chrome, Safari
-  }
-}

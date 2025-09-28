@@ -1,7 +1,7 @@
 "use client";
 
 import styles from './style.module.scss';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -11,177 +11,63 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 interface ImageData {
     id: number;
-    src: string;
-    alt: string;
+    title: string;
+    description: string;
+    url: string;
 }
 
-const img: ImageData[] = [
-    {
-        id: 1,
-        src: '/images/image1.jpg',
-        alt: 'image 1',
-    },
-    {
-        id: 2,
-        src: '/images/image2.jpg',
-        alt: 'image 2',
-    },
-    {
-        id: 3,
-        src: '/images/image3.jpg',
-        alt: 'image 3',
-    },
-    {
-        id: 4,
-        src: '/images/image4.jpg',
-        alt: 'image 4',
-    },
-    {
-        id: 5,
-        src: '/images/image5.jpg',
-        alt: 'image 5',
-    },
-    {
-        id: 6,
-        src: '/images/image6.jpg',
-        alt: 'image 6',
-    },
-    {
-        id: 7,
-        src: '/images/image7.jpg',
-        alt: 'image 7',
-    },
-    {
-        id: 8,
-        src: '/images/image8.jpg',
-        alt: 'image 8',
-    },
-    {
-        id: 9,
-        src: '/images/image9.jpg',
-        alt: 'image 9',
-    },
-    {
-        id: 10,
-        src: '/images/image10.jpg',
-        alt: 'image 10',
-    },
-    {
-        id: 11,
-        src: '/images/image11.jpg',
-        alt: 'image 11',
-    },
-    {
-        id: 12,
-        src: '/images/image12.jpg',
-        alt: 'image 12',
-    },
-    {
-        id: 13,
-        src: '/images/image13.jpg',
-        alt: 'image 13'
-    },
-    {
-        id: 14,
-        src: '/images/image14.jpg',
-        alt: 'image 14'
-    },
-    {
-        id: 15,
-        src: '/images/image15.jpg',
-        alt: 'image 15'
-    },
-    {
-        id: 16,
-        src: '/images/image16.jpg',
-        alt: 'image 16'
-    },
-    {
-        id: 17,
-        src: '/images/image17.jpg',
-        alt: 'image 17',
-    },
-    {
-        id: 18,
-        src: '/images/image18.jpg',
-        alt: 'image 18',
-    },
-    {
-        id: 19,
-        src: '/images/image19.jpg',
-        alt: 'image 19',
-    },
-    {
-        id: 20,
-        src: '/images/image20.jpg',
-        alt: 'image 21',
-    },
-    {
-        id: 21,
-        src: '/images/image21.jpg',
-        alt: 'image 5 (duplicate)',
-    },
-    {
-        id: 22,
-        src: '/images/image22.jpg',
-        alt: 'image 6 (duplicate)',
-    },
-    {
-        id: 23,
-        src: '/images/image23.jpg',
-        alt: 'image 7 (duplicate)',
-    },
-    {
-        id: 24,
-        src: '/images/image24.jpg',
-        alt: 'image 8 (duplicate)',
-    },
-    {
-        id: 25,
-        src: '/images/image25.jpg',
-        alt: 'image 9 (duplicate)',
-    },
-    {
-        id: 26,
-        src: '/images/image26.jpg',
-        alt: 'image 10 (duplicate)',
-    },
-    {
-        id: 27,
-        src: '/images/image27.jpg',
-        alt: 'image 11 (duplicate)',
-    },
-    {
-        id: 28,
-        src: '/images/image28.jpg',
-        alt: 'image 12 (duplicate)',
-    },
-    {
-        id: 29,
-        src: '/images/image29.jpg',
-        alt: 'image 13 (duplicate)'
-    },
-    {
-        id: 30,
-        src: '/images/image30.jpg',
-        alt: 'image 14 (duplicate)'
-    },
-    {
-        id: 31,
-        src: '/images/Preloader.jpeg',
-        alt: 'Preloader image'
-    },
-    {
-        id: 32,
-        src: '/images/Portrait.jpg',
-        alt: 'Portrait image'
-    }
-];
+interface ApiResponse {
+    success: boolean;
+    images: ImageData[];
+    error?: string;
+}
 
 export default function Landing() {
     const landingRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+    const [images, setImages] = useState<ImageData[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchImages = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/images?fresh=true');
+                const result: ApiResponse = await response.json();
+
+                if (result.success && result.images) {
+                    setImages(result.images);
+                    console.log('✅ Images loaded from API:', result.images.length); // Add this
+                } else {
+                    throw new Error(result.error || 'Failed to fetch images');
+                }
+            } catch (err) {
+                console.error('❌ API Error:', err);
+                setError(err instanceof Error ? err.message : 'Failed to load images');
+
+                setImages([
+                    {
+                        id: 1,
+                        title: "Sample Image 1",
+                        description: "Fallback Image",
+                        url: "/images/image1.jpg"
+                    },
+                    {
+                        id: 2,
+                        title: "Sample Image 2",
+                        description: "Fallback image",
+                        url: "/images/image2.jpg"
+                    }
+                ]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchImages();
+    }, []);
 
     const addToRefs = (el: HTMLDivElement | null, index: number) => {
         if (el && !imageRefs.current[index]) {
@@ -195,12 +81,10 @@ export default function Landing() {
 
         if (!container || !landing) return;
 
-        // Set initial visibility
         gsap.set(landing, {
             visibility: "visible"
         });
 
-        // Your original entrance animations - kept exactly the same
         gsap.from(container, {
             xPercent: -100,
             duration: 1.5,
@@ -225,8 +109,8 @@ export default function Landing() {
             return -(containerWidth - viewportWidth);
         };
 
-        // Only add horizontal scroll if content overflows
-        setTimeout(() => { // Small delay to ensure container has proper width
+
+        setTimeout(() => {
             if (container.scrollWidth > window.innerWidth) {
                 const horizontalTween = gsap.to(container, {
                     x: getScrollAmount,
@@ -247,20 +131,34 @@ export default function Landing() {
             }
         }, 100);
 
-    }, { scope: landingRef });
+    }, { scope: landingRef, dependencies: [images, loading] });
+
+    if (loading) {
+        return (
+            <section className={styles.landing}>
+                <div className={styles.loading}>
+                    <p>Loading gallery...</p>
+                </div>
+            </section>
+        );
+    }
+
+    if (error) {
+        console.warn('Using fallback images due to API error:', error);
+    }
 
     return (
         <section className={styles.landing} ref={landingRef}>
             <div className={styles.container} ref={containerRef}>
-                {img.map((image, index) => (
+                {images.map((image, index) => (
                     <div
                         key={image.id}
                         className={styles.imageWrapper}
                         ref={(el) => addToRefs(el, index)}
                     >
                         <Image
-                            src={image.src}
-                            alt={image.alt}
+                            src={image.url}
+                            alt={image.title}
                             width={220}
                             height={80}
                             priority={image.id <= 2}
