@@ -6,14 +6,17 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
+const PHOTO_TYPES = ['Portrait', 'Landscape', 'B&W'] as const;
+type PhotoType = typeof PHOTO_TYPES[number];
+
 interface ImageData {
     id: number;
-    title: string;
-    description: string;
     url: string;
+    type: PhotoType;
 }
 
 interface ApiResponse {
@@ -26,10 +29,36 @@ export default function Landing() {
     const landingRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const router = useRouter();
 
     const [images, setImages] = useState<ImageData[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+
+    const handleImageClick = async (imageType: PhotoType) => {
+        try {
+            if (!imageType) {
+                throw new Error('Image type is undefined');
+            }
+
+            const routeMap: Record<PhotoType, string> = {
+                'Portrait': '/portrait',
+                'Landscape': '/landscape',
+                'B&W': '/bw'
+            };
+
+            const route = routeMap[imageType];
+
+            if (!route) {
+                throw new Error(`No route found for image type: ${imageType}`);
+            }
+
+            await router.push(route);
+        } catch (error) {
+            console.error('Navigation error:', error);
+        }
+    };
+
 
     useEffect(() => {
         const fetchImages = async () => {
@@ -40,25 +69,21 @@ export default function Landing() {
 
                 if (result.success && result.images) {
                     setImages(result.images);
-                    console.log('✅ Images loaded from API:', result.images.length); // Add this
+                    console.log('Images loaded from API:', result.images.length);
                 } else {
                     throw new Error(result.error || 'Failed to fetch images');
                 }
             } catch (err) {
-                console.error('❌ API Error:', err);
+                console.error('API Error:', err);
                 setError(err instanceof Error ? err.message : 'Failed to load images');
 
                 setImages([
                     {
                         id: 1,
-                        title: "Sample Image 1",
-                        description: "Fallback Image",
                         url: "/images/image1.jpg"
                     },
                     {
                         id: 2,
-                        title: "Sample Image 2",
-                        description: "Fallback image",
                         url: "/images/image2.jpg"
                     }
                 ]);
@@ -154,11 +179,12 @@ export default function Landing() {
                     <div
                         key={image.id}
                         className={styles.imageWrapper}
+                        onClick={() => handleImageClick(image.type)}
                         ref={(el) => addToRefs(el, index)}
                     >
                         <Image
                             src={image.url}
-                            alt={image.title}
+                            alt={image.id}
                             width={220}
                             height={80}
                             priority={image.id <= 2}

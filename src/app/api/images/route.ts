@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 
-// Force dynamic API behavior
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// TypeScript interfaces
+const PHOTO_TYPES = ['Portrait', 'Landscape', 'B&W'] as const;
+type PhotoType = typeof PHOTO_TYPES[number];
+
 interface ImageData {
     id: number;
-    title: string;
-    description: string;
     url: string;
+    type: PhotoType;
 }
 
 interface CacheEntry {
@@ -23,11 +23,9 @@ interface ApiResponse {
     error?: string;
 }
 
-// Cache for real-time updates
 const contentCache = new Map<string, CacheEntry>();
-const CACHE_TTL = 30 * 1000; // 30 seconds for real-time feel
+const CACHE_TTL = 30 * 1000;
 
-// Helper function to validate environment variables
 function validateEnvVars(): void {
     const required = ['GITHUB_OWNER', 'GITHUB_REPO', 'GITHUB_TOKEN'];
     const missing = required.filter(env => !process.env[env]);
@@ -37,7 +35,6 @@ function validateEnvVars(): void {
     }
 }
 
-// Helper function to get GitHub headers for API calls
 function getGitHubHeaders(): Record<string, string> {
     return {
         'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
@@ -55,32 +52,27 @@ function getRawGitHubHeaders(): Record<string, string> {
     };
 }
 
-// Helper function to get cache key
 function getCacheKey(): string {
     return 'images';
 }
 
-// Helper function to check if cache is valid
 function isCacheValid(cacheEntry: CacheEntry | undefined): boolean {
     return !!(cacheEntry && (Date.now() - cacheEntry.timestamp) < CACHE_TTL);
 }
 
 export async function GET(request: Request): Promise<NextResponse> {
     try {
-        // Validate environment variables
         validateEnvVars();
 
-        // For real-time updates, you might want to skip cache entirely
         const url = new URL(request.url);
         const skipCache = url.searchParams.get('fresh') === 'true';
 
         if (!skipCache) {
-            // Check cache first
             const cacheKey = getCacheKey();
             const cachedContent = contentCache.get(cacheKey);
 
             if (isCacheValid(cachedContent) && cachedContent) {
-                console.log('✅ Cache hit for images');
+                console.log('Cache hit for images');
                 return NextResponse.json({
                     success: true,
                     images: cachedContent.data
@@ -234,17 +226,15 @@ export async function PUT(request: Request): Promise<NextResponse> {
             );
         }
 
-        // Validate required fields
-        if (!image.title || !image.description || !image.url) {
+        if (!image.url || !image.type) {
             return NextResponse.json(
-                { error: 'Missing required fields: title, description, url' },
+                { error: 'Missing required fields: url & type' },
                 { status: 400 }
             );
         }
 
-        console.log('🔄 Attempting to save images to GitHub');
+        console.log('Attempting to save images to GitHub');
 
-        // Get current file SHA and content with retry logic
         let sha: string | null = null;
         let currentImages: ImageData[] = [];
         let retryCount = 0;
@@ -256,9 +246,8 @@ export async function PUT(request: Request): Promise<NextResponse> {
                 const timeoutId = setTimeout(() => controller.abort(), 10000);
 
                 try {
-                    // Use GitHub API for getting SHA (required for updates)
                     const getResponse = await fetch(
-                        `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/contents/content.json`,
+                        `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
                         {
                             headers: getGitHubHeaders(),
                             cache: 'no-store',
@@ -304,9 +293,8 @@ export async function PUT(request: Request): Promise<NextResponse> {
         if (action === 'create') {
             const newImage: ImageData = {
                 id: image.id || Date.now(),
-                title: image.title,
-                description: image.description,
-                url: image.url
+                url: image.url,
+                type: image.type as PhotoType
             };
             updatedImages = [newImage, ...currentImages];
         } else if (action === 'update') {
@@ -322,15 +310,12 @@ export async function PUT(request: Request): Promise<NextResponse> {
             return NextResponse.json({ error: 'Invalid action. Must be "create", "update", or "delete"' }, { status: 400 });
         }
 
-        // Prepare update payload
         const updatePayload = {
-            message: `${action === 'create' ? 'Add' : action === 'update' ? 'Update' : 'Delete'} image: ${image.title} - ${new Date().toISOString()}`,
             content: Buffer.from(JSON.stringify(updatedImages, null, 2)).toString('base64'),
             branch: process.env.GITHUB_BRANCH || 'main',
             ...(sha && { sha })
         };
 
-        // Update file with retry logic (still use API endpoint for updates)
         retryCount = 0;
 
         while (retryCount < maxRetries) {
@@ -378,7 +363,6 @@ export async function PUT(request: Request): Promise<NextResponse> {
             }
         }
 
-        // Clear ALL cache entries to ensure fresh data
         contentCache.clear();
         console.log('🗑️ All cache cleared after updating images');
 
@@ -389,7 +373,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
         });
 
     } catch (error) {
-        console.error('❌ Error in PUT /api/images:', error);
+        console.error('Error in PUT /api/images:', error);
 
         return NextResponse.json({
             success: false,
@@ -403,9 +387,8 @@ function getDefaultData(): ImageData[] {
     return [
         {
             id: 1,
-            title: "Sample Image",
-            description: "Default placeholder image",
-            url: "/images/placeholder.jpg"
+            url: "/images/placeholder.jpg",
+            type: "Portrait"
         }
     ];
 }
