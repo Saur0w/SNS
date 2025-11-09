@@ -10,8 +10,8 @@ import { useRouter } from 'next/navigation';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-const PHOTO_TYPES = ['Portrait', 'Landscape', 'B&W'] as const;
-type PhotoType = typeof PHOTO_TYPES[number];
+[const PHOTO_TYPES = ['Portrait', 'Landscape', 'B&W'] as const;
+type PhotoType = typeof PHOTO_TYPES[number];]
 
 interface ImageData {
     id: number;
