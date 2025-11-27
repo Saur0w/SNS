@@ -162,7 +162,7 @@ export default function GalleryAdmin() {
                 if (response.ok) {
                     setIsEditing(false);
                     setEditingImageId(null);
-                    await loadImages();
+                    await loadImages(); // ✅ This reloads the list
                     alert('Image updated successfully!');
                 } else {
                     const errorData = await response.json();
@@ -196,6 +196,7 @@ export default function GalleryAdmin() {
             setIsLoading(false);
         }
     };
+
 
     const deleteImage = async (imageId: string): Promise<void> => {
         if (!confirm('Are you sure you want to delete this image?')) {

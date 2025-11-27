@@ -59,7 +59,7 @@ export async function GET() {
         }
 
         const response = await fetch(
-            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/gallery.json`,
+            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
             {
                 headers: getGithubHeaders(),
                 cache: 'no-store'
@@ -90,6 +90,7 @@ export async function GET() {
     }
 }
 
+// POST - Add new image to gallery
 export async function POST(request: NextRequest) {
     try {
         validateEnvVars();
@@ -104,9 +105,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // ALWAYS fetch the latest content and SHA
         const response = await fetch(
-            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/contents/content.json`
-            ,
+            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
             {
                 headers: getGithubHeaders(),
                 cache: 'no-store'
@@ -118,11 +119,17 @@ export async function POST(request: NextRequest) {
 
         if (response.ok) {
             const file: GithubFile = await response.json();
-            sha = file.sha;
+            sha = file.sha; // Get the LATEST SHA
             const contentJson = JSON.parse(Buffer.from(file.content, 'base64').toString());
             currentImages = contentJson.images || [];
+        } else if (response.status === 404) {
+            // File doesn't exist yet, create it
+            sha = undefined;
+        } else {
+            throw new Error(`GitHub API error: ${response.status}`);
         }
 
+        // Add new image
         const newImage: ImageData = {
             id: generateId(),
             url: image.url,
@@ -135,15 +142,16 @@ export async function POST(request: NextRequest) {
 
         currentImages.push(newImage);
 
+        // Update GitHub with the LATEST SHA
         const updateResponse = await fetch(
-            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/gallery.json`,
+            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
             {
                 method: 'PUT',
                 headers: getGithubHeaders(),
                 body: JSON.stringify({
                     message: `Add new image: ${newImage.title || newImage.id}`,
                     content: Buffer.from(JSON.stringify({ images: currentImages }, null, 2)).toString('base64'),
-                    sha: sha
+                    sha: sha // Use the fresh SHA we just fetched
                 })
             }
         );
@@ -153,6 +161,7 @@ export async function POST(request: NextRequest) {
             throw new Error(errorData.message || 'Failed to update GitHub');
         }
 
+        // Clear cache
         galleryCache.delete('images');
 
         return NextResponse.json({
@@ -169,6 +178,8 @@ export async function POST(request: NextRequest) {
     }
 }
 
+
+
 export async function PUT(request: NextRequest) {
     try {
         validateEnvVars();
@@ -177,7 +188,7 @@ export async function PUT(request: NextRequest) {
         const { action, imageId, imageData } = body;
 
         const response = await fetch(
-            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/gallery.json`,
+            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
             {
                 headers: getGithubHeaders(),
                 cache: 'no-store'
@@ -218,7 +229,7 @@ export async function PUT(request: NextRequest) {
         }
 
         const updateResponse = await fetch(
-            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/gallery.json`,
+            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
             {
                 method: 'PUT',
                 headers: getGithubHeaders(),
