@@ -10,6 +10,7 @@
   max-width: 100%;
 }
 
+/* center loading / empty states */
 .loading,
 .empty {
   display: flex;
@@ -20,37 +21,37 @@
   color: #666;
 }
 
-.gallery {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(350px, 400px);
-  gap: 1.5rem;
+/* wrapper keeps scroll but hides scrollbar on all browsers */
+.galleryWrapper {
+  width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 2rem;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+
+  /* hide scrollbar – Chrome, Safari, Edge, Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* hide scrollbar – Firefox */
+  scrollbar-width: none;
+
+  /* hide scrollbar – old IE/Edge */
+  -ms-overflow-style: none;
 }
 
-.gallery::-webkit-scrollbar {
-  height: 8px;
+/* horizontal grid that feels like a “row grid” */
+.gallery {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(320px, 380px);
+  gap: 1.5rem;
+  padding: 2rem 0;
 }
 
-.gallery::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-.gallery::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 10px;
-}
-
-.gallery::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
+/* card styles */
 .card {
   display: flex;
   flex-direction: column;
@@ -60,17 +61,17 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   scroll-snap-align: start;
-  min-height: 400px;
+  min-height: 380px;
 }
 
 .card:hover {
   transform: translateY(-7px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
 .photo {
   width: 100%;
-  height: 300px;
+  height: 260px;
   object-fit: cover;
   display: block;
 }
@@ -110,23 +111,24 @@
   text-transform: capitalize;
 }
 
+/* responsive tweaks */
 @media (max-width: 768px) {
   .landing {
     padding: 1rem;
   }
 
   .gallery {
-    grid-auto-columns: minmax(280px, 320px);
+    grid-auto-columns: minmax(260px, 300px);
     gap: 1rem;
-    padding: 1rem;
+    padding: 1.5rem 0;
   }
 
   .card {
-    min-height: 350px;
+    min-height: 340px;
   }
 
   .photo {
-    height: 250px;
+    height: 230px;
   }
 
   .info {
@@ -144,13 +146,13 @@
 
 @media (max-width: 480px) {
   .gallery {
-    grid-auto-columns: minmax(250px, 280px);
+    grid-auto-columns: minmax(220px, 260px);
     gap: 0.75rem;
-    padding: 0.75rem;
+    padding: 1rem 0;
   }
 
   .card {
-    min-height: 320px;
+    min-height: 310px;
   }
 
   .photo {
