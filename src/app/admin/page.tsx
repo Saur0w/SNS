@@ -146,7 +146,6 @@ export default function GalleryAdmin() {
 
         try {
             if (editingImageId) {
-                // Update existing image
                 const response = await fetch('/api/gallery', {
                     method: 'PUT',
                     headers: {
@@ -162,14 +161,13 @@ export default function GalleryAdmin() {
                 if (response.ok) {
                     setIsEditing(false);
                     setEditingImageId(null);
-                    await loadImages(); // ✅ This reloads the list
+                    await loadImages();
                     alert('Image updated successfully!');
                 } else {
                     const errorData = await response.json();
                     alert(`Error updating image: ${errorData.error || 'Unknown error'}`);
                 }
             } else {
-                // Create new image
                 const response = await fetch('/api/gallery', {
                     method: 'POST',
                     headers: {

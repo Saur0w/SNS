@@ -1,9 +1,8 @@
-// admin/admin.module.scss
 
 .admin {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem 1rem;
+  padding: 150px 1rem 2rem;
 
   @media (max-width: 768px) {
     padding: 1rem 0.5rem;

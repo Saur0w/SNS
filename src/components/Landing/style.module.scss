@@ -1,161 +1,146 @@
+$bg-color: #f4f4f0;
+$text-main: #222;
+$card-size: 22vh;
+
 .landing {
-  width: 100%;
-  min-height: 100vh;
-  background: #f5f5f5;
-  padding: 2rem;
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  background-color: $bg-color;
+  overflow: hidden;
+  color: $text-main;
+  font-family: 'Helvetica Neue', sans-serif;
+  padding-top: 80px;
 }
 
-.main {
-  width: 100%;
-  max-width: 100%;
+.header {
+  position: fixed;
+  top: 2rem;
+  left: 2rem;
+  z-index: 10;
+  pointer-events: none;
+  h1 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+
+    .count {
+      color: #888;
+      font-weight: 400;
+      margin-left: 0.5rem;
+      font-size: 0.9rem;
+    }
+  }
 }
 
-/* center loading / empty states */
-.loading,
-.empty {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 50vh;
-  font-size: 1.2rem;
-  color: #666;
-}
-
-/* wrapper keeps scroll but hides scrollbar on all browsers */
-.galleryWrapper {
+.scrollWrapper {
+  height: 100%;
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  scroll-behavior: smooth;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+  cursor: grab;
 
-  /* hide scrollbar – Chrome, Safari, Edge, Opera */
+
   &::-webkit-scrollbar {
     display: none;
   }
-
-  /* hide scrollbar – Firefox */
+  -ms-overflow-style: none;
   scrollbar-width: none;
 
-  /* hide scrollbar – old IE/Edge */
-  -ms-overflow-style: none;
+  &:active {
+    cursor: grabbing;
+  }
 }
 
-/* horizontal grid that feels like a “row grid” */
 .gallery {
   display: grid;
+  grid-template-rows: repeat(4, $card-size);
   grid-auto-flow: column;
-  grid-auto-columns: minmax(320px, 380px);
-  gap: 1.5rem;
-  padding: 2rem 0;
+  gap: 0.08rem;
+
+  height: 100vh;
+  padding: 0 10vw;
+  width: max-content;
+  align-content: center;
 }
 
-/* card styles */
 .card {
+  position: relative;
+  width: $card-size;
+  height: $card-size;
   display: flex;
   flex-direction: column;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  scroll-snap-align: start;
-  min-height: 380px;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    z-index: 2;
+    transform: scale(0.98);
+
+    .photo {
+      filter: saturate(1.2);
+    }
+
+    .meta {
+      opacity: 1;
+    }
+  }
+
+  .imageContainer {
+    width: 150px;
+    height: 150px;
+    overflow: hidden;
+    background: #e5e5e5;
+
+    .photo {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      display: block;
+      transition: filter 0.4s ease, transform 0.6s ease;
+    }
+  }
+
+  .meta {
+    position: absolute;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+
+    .id {
+      background: rgba(255,255,255,0.9);
+      padding: 0.2rem 0.4rem;
+      font-size: 0.65rem;
+      font-family: monospace;
+      color: black;
+    }
+  }
 }
 
-.card:hover {
-  transform: translateY(-7px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-}
-
-.photo {
-  width: 100%;
-  height: 260px;
-  object-fit: cover;
-  display: block;
-}
-
-.info {
-  padding: 1.5rem;
+.loading {
+  height: 100vh;
+  width: 100vw;
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  flex: 1;
-}
+  justify-content: center;
+  align-items: center;
 
-.info h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #222;
-  line-height: 1.4;
-}
-
-.info p {
-  margin: 0;
-  font-size: 0.95rem;
-  color: #666;
-  line-height: 1.6;
-}
-
-.category {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  align-self: flex-start;
-  text-transform: capitalize;
-}
-
-/* responsive tweaks */
-@media (max-width: 768px) {
-  .landing {
-    padding: 1rem;
-  }
-
-  .gallery {
-    grid-auto-columns: minmax(260px, 300px);
-    gap: 1rem;
-    padding: 1.5rem 0;
-  }
-
-  .card {
-    min-height: 340px;
-  }
-
-  .photo {
-    height: 230px;
-  }
-
-  .info {
-    padding: 1rem;
-  }
-
-  .info h3 {
-    font-size: 1.1rem;
-  }
-
-  .info p {
-    font-size: 0.9rem;
+  .spinner {
+    width: 30px;
+    height: 30px;
+    border: 2px solid #ccc;
+    border-top-color: #333;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
   }
 }
 
-@media (max-width: 480px) {
-  .gallery {
-    grid-auto-columns: minmax(220px, 260px);
-    gap: 0.75rem;
-    padding: 1rem 0;
-  }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
-  .card {
-    min-height: 310px;
-  }
-
-  .photo {
-    height: 200px;
-  }
+.spacer {
+  width: 10vw;
 }
