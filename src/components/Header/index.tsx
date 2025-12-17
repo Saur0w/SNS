@@ -2,14 +2,14 @@
 
 import styles from './style.module.scss';
 import Link from 'next/link';
-import {gsap} from "gsap";
-import {useGSAP} from '@gsap/react';
-import {useEffect, useRef, useState, JSX} from 'react';
+import { gsap } from "gsap";
+import { useGSAP } from '@gsap/react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 gsap.registerPlugin(useGSAP);
 
-export default function Header(): JSX.Element {
+export default function Header() {
     const headerRef = useRef<HTMLElement>(null);
     const navigationRef = useRef<HTMLDivElement>(null);
     const navContentRef = useRef<HTMLDivElement>(null);
@@ -21,17 +21,26 @@ export default function Header(): JSX.Element {
 
     const isAdminPage = pathname?.startsWith('/admin');
 
+    // Close menu when route changes (user clicks a link)
+    useEffect(() => {
+        if (isActive) {
+            setIsActive(false);
+        }
+    }, [pathname]);
+
+    // Setup initial state (hidden)
     useGSAP(() => {
         gsap.set(navigationRef.current, { height: 0, overflow: "hidden" });
         gsap.set(closeTextRef.current, { opacity: 0 });
-    }, {
-        scope: headerRef
-    });
+        gsap.set(navContentRef.current, { y: -30, opacity: 0 });
+    }, { scope: headerRef });
 
-    useEffect(() => {
+    // Handle Open/Close Animation
+    useGSAP(() => {
         const tl = gsap.timeline();
 
         if (isActive) {
+            // OPEN ANIMATION
             tl.to(menuTextRef.current, {
                 opacity: 0,
                 duration: 0.3,
@@ -47,16 +56,17 @@ export default function Header(): JSX.Element {
                     duration: 0.8,
                     ease: "cubic-bezier(0.76, 0, 0.24, 1)"
                 }, "-=0.1")
-                .from(navContentRef.current, {
-                    y: -30,
-                    opacity: 0,
+                .to(navContentRef.current, {
+                    y: 0,
+                    opacity: 1,
                     duration: 0.6,
                     ease: "back.out(1.2)"
                 }, "-=0.4");
         } else {
+            // CLOSE ANIMATION
             tl.to(navContentRef.current, {
                 y: -20,
-                opacity: 1,
+                opacity: 0, // Ensure it fades out
                 duration: 0.4,
                 ease: "power2.inOut"
             })
@@ -76,10 +86,6 @@ export default function Header(): JSX.Element {
                     ease: "power2.inOut"
                 }, "-=0.2");
         }
-
-        return (): void => {
-            tl.kill();
-        };
     }, [isActive]);
 
     return (
@@ -88,9 +94,10 @@ export default function Header(): JSX.Element {
             ref={headerRef}
         >
             <div className={styles.bar}>
-                <Link href="/">
+                <Link href="/" onClick={() => setIsActive(false)}>
                     SNS
                 </Link>
+
                 <div onClick={() => setIsActive(!isActive)} className={styles.el}>
                     <div className={`${styles.burger} ${isActive ? styles.burgerActive : ""}`}></div>
                     <div className={styles.label}>
@@ -103,10 +110,10 @@ export default function Header(): JSX.Element {
             <div className={styles.navigation} ref={navigationRef}>
                 <div className={styles.navContent}>
                     <div className={styles.navLinks} ref={navContentRef}>
-                        <Link href="/">Home</Link>
-                        <Link href="/about">About</Link>
-                        <Link href="/portrait">Portraits</Link>
-                        <Link href="/landscape">Landscapes</Link>
+                        <Link href="/" onClick={() => setIsActive(false)}>Home</Link>
+                        <Link href="/about" onClick={() => setIsActive(false)}>About</Link>
+                        <Link href="/portrait" onClick={() => setIsActive(false)}>Portraits</Link>
+                        <Link href="/landscape" onClick={() => setIsActive(false)}>Landscapes</Link>
                     </div>
                 </div>
             </div>

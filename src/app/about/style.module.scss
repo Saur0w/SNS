@@ -1,0 +1,136 @@
+$bg-color: #f4f4f0;
+$text-main: #222;
+$text-light: #777;
+
+.about {
+  background-color: $bg-color;
+  min-height: 100vh;
+  width: 100vw;
+  color: $text-main;
+  font-family: 'Helvetica Neue', sans-serif;
+  padding: 4rem 2rem;
+  position: relative;
+  overflow-x: hidden;
+
+  // Split layout on desktop
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  @media (min-width: 1024px) {
+    padding: 0 6rem;
+  }
+}
+
+.backBtn {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  text-decoration: none;
+  color: $text-main;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  z-index: 10;
+  border: 1px solid rgba(0,0,0,0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: $text-main;
+    color: $bg-color;
+    border-color: $text-main;
+  }
+}
+
+.content {
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 4rem;
+
+  h1 {
+    font-size: clamp(3rem, 7vw, 7.5rem); // Responsive fluid typography
+    line-height: 0.95;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    margin: 0;
+    overflow: hidden; // Ensures text sliding up doesn't show outside
+  }
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4rem;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  padding-top: 4rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1.5fr 1fr; // Bio takes more space
+    gap: 6rem;
+  }
+}
+
+.bioWrapper {
+  // Styles for the GSAP line masks
+  // This class is applied dynamically by the TSX logic if needed,
+  // but we specifically style the text inside.
+}
+
+.bio {
+  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  line-height: 1.4;
+  font-weight: 400;
+  color: $text-main;
+  margin: 0;
+  max-width: 50ch; // Optimal reading width
+}
+
+// Important: This class is used by GSAP SplitText for the mask effect
+.lineMask {
+  overflow: hidden !important;
+  display: block; // Ensures lines stack properly
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .metaGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: $text-light;
+      margin: 0 0 1rem 0;
+    }
+
+    a, span {
+      text-decoration: none;
+      color: $text-main;
+      font-size: 1rem;
+      transition: color 0.2s ease;
+      cursor: pointer;
+
+      &:hover {
+        color: $text-light;
+      }
+    }
+  }
+}

@@ -1,6 +1,5 @@
 $bg-color: #f4f4f0;
 $text-main: #222;
-$card-size: 22vh;
 
 .landing {
   position: relative;
@@ -10,15 +9,15 @@ $card-size: 22vh;
   overflow: hidden;
   color: $text-main;
   font-family: 'Helvetica Neue', sans-serif;
-  padding-top: 80px;
 }
 
 .header {
   position: fixed;
   top: 2rem;
   left: 2rem;
-  z-index: 10;
-  pointer-events: none;
+  z-index: 50; // Above Canvas
+  pointer-events: none; // Allow clicks to pass through to Canvas
+
   h1 {
     font-size: 1.2rem;
     font-weight: 600;
@@ -35,91 +34,97 @@ $card-size: 22vh;
   }
 }
 
-.scrollWrapper {
-  height: 100%;
+// Replaces .scrollWrapper and .gallery
+.canvasWrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  cursor: grab;
+  height: 100%;
+  z-index: 1;
 
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-
-  &:active {
-    cursor: grabbing;
+  // Remove outline on focus
+  canvas {
+    outline: none;
+    touch-action: none; // Prevent default touch actions
   }
 }
 
-.gallery {
-  display: grid;
-  grid-template-rows: repeat(4, $card-size);
-  grid-auto-flow: column;
-  gap: 0.08rem;
-
-  height: 100vh;
-  padding: 0 10vw;
-  width: max-content;
-  align-content: center;
-}
-
-.card {
-  position: relative;
-  width: $card-size;
-  height: $card-size;
+// --- LIGHTBOX MODAL ---
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background-color: rgba(244, 244, 240, 0.85);
+  backdrop-filter: blur(4px);
   display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  opacity: 0; // Handled by GSAP on mount
 
-  &:hover {
-    z-index: 2;
-    transform: scale(0.98);
+  .modalContent {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
 
-    .photo {
-      filter: saturate(1.2);
-    }
+  .closeBtn {
+    position: absolute;
+    top: -3rem;
+    right: 0;
+    background: none;
+    border: none;
+    font-size: 2.5rem;
+    line-height: 1;
+    cursor: pointer;
+    color: $text-main;
+    opacity: 0.6;
+    transition: opacity 0.3s;
 
-    .meta {
+    &:hover {
       opacity: 1;
     }
   }
 
-  .imageContainer {
-    width: 150px;
-    height: 150px;
+  .modalImageWrapper {
+    border-radius: 8px;
     overflow: hidden;
-    background: #e5e5e5;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
 
-    .photo {
-      width: 150px;
-      height: 150px;
-      object-fit: cover;
+    // Ensure modal image respects constraints
+    img {
+      max-width: 100%;
+      max-height: 70vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
       display: block;
-      transition: filter 0.4s ease, transform 0.6s ease;
     }
   }
 
-  .meta {
-    position: absolute;
-    bottom: 0.5rem;
-    left: 0.5rem;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+  .modalInfo {
+    text-align: center;
 
-    .id {
-      background: rgba(255,255,255,0.9);
-      padding: 0.2rem 0.4rem;
-      font-size: 0.65rem;
-      font-family: monospace;
-      color: black;
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin: 0 0 0.5rem 0;
+    }
+
+    p {
+      color: #666;
+      font-size: 0.9rem;
+      margin: 0;
     }
   }
 }
 
+// Loading State
 .loading {
   height: 100vh;
   width: 100vw;
@@ -139,8 +144,4 @@ $card-size: 22vh;
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-.spacer {
-  width: 10vw;
 }

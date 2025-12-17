@@ -11,9 +11,10 @@
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@octokit/rest": "^22.0.0",
-    "@react-three/drei": "^10.7.6",
-    "@react-three/fiber": "^9.3.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.2",
     "@studio-freight/lenis": "^1.0.42",
+    "@types/three": "^0.182.0",
     "cloudinary": "^2.7.0",
     "geist": "^1.5.1",
     "gsap": "^3.13.0",
