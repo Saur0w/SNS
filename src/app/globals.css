@@ -1,4 +1,4 @@
-/* Minimal Reset */
+
 * {
   margin: 0;
   padding: 0;
@@ -6,7 +6,7 @@
 }
 
 html, body {
-  overflow-x: hidden; /* Prevent horizontal scroll only */
+  overflow-x: hidden;
   font-family: system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
