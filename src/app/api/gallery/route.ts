@@ -3,11 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-interface CacheEntry {
-    data: ImageData[];
-    timestamp: number;
-}
-
 interface ImageData {
     id: string;
     url: string;
@@ -19,269 +14,164 @@ interface ImageData {
     updatedAt?: string;
 }
 
-interface GithubFile {
+interface GithubFileResponse {
     content: string;
     sha: string;
 }
 
-const galleryCache = new Map<string, CacheEntry>();
-const CACHE_TTL = 30 * 1000; // 30 seconds
-
-function validateEnvVars(): void {
-    const required = ['GITHUB_OWNER', 'GITHUB_REPO', 'GITHUB_TOKEN'];
-    const missing = required.filter(env => !process.env[env]);
-
-    if (missing.length > 0) {
-        throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
-    }
+interface CacheStore {
+    data: ImageData[];
+    timestamp: number;
 }
 
-function getGithubHeaders(): Record<string, string> {
+const galleryCache = new Map<string, CacheStore>();
+const CACHE_TTL = 30 * 1000;
+
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    return String(error);
+}
+
+async function getGalleryData(): Promise<{ images: ImageData[]; sha?: string }> {
+    const response = await fetch(
+        `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
+        {
+            headers: {
+                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'NextJS-Gallery-App',
+            },
+            cache: 'no-store',
+        }
+    );
+
+    if (response.status === 404) return { images: [], sha: undefined };
+    if (!response.ok) throw new Error(`GitHub Fetch Error: ${response.status}`);
+
+    const file: GithubFileResponse = await response.json();
+    const content = Buffer.from(file.content, 'base64').toString('utf-8');
+    const data = JSON.parse(content) as { images: ImageData[] };
+
     return {
-        'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'NextJS-Gallery-App',
-        'X-Github-Api-Version': '2022-11-28'
+        images: Array.isArray(data.images) ? data.images : [],
+        sha: file.sha,
     };
 }
 
-function generateId(): string {
-    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
+async function updateGalleryData(images: ImageData[], sha: string | undefined, message: string): Promise<void> {
+    // FIX 4: Build body explicitly — omit sha key entirely when undefined (required by GitHub for new files)
+    const bodyPayload: Record<string, unknown> = {
+        message,
+        content: Buffer.from(JSON.stringify({ images }, null, 2)).toString('base64'),
+    };
+    if (sha !== undefined) bodyPayload.sha = sha;
+
+    const response = await fetch(
+        `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
+        {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'NextJS-Gallery-App', // FIX 1: added missing header
+            },
+            body: JSON.stringify(bodyPayload),
+        }
+    );
+
+    if (!response.ok) {
+        const errorData = await response.json() as { message?: string };
+        throw new Error(errorData.message || 'Failed to update GitHub');
+    }
+
+    galleryCache.delete('images');
 }
 
 export async function GET() {
     try {
-        validateEnvVars();
-
         const cacheEntry = galleryCache.get('images');
         if (cacheEntry && (Date.now() - cacheEntry.timestamp) < CACHE_TTL) {
             return NextResponse.json({ images: cacheEntry.data });
         }
 
-        const response = await fetch(
-            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
-            {
-                headers: getGithubHeaders(),
-                cache: 'no-store'
-            }
-        );
-
-        if (!response.ok) {
-            if (response.status === 404) {
-                return NextResponse.json({ images: [] });
-            }
-            throw new Error(`GitHub API error: ${response.status} - ${response.statusText}`);
-        }
-
-        const file: GithubFile = await response.json();
-        const contentJson = JSON.parse(Buffer.from(file.content, 'base64').toString());
-        const images: ImageData[] = contentJson.images || [];
-
+        const { images } = await getGalleryData();
         galleryCache.set('images', { data: images, timestamp: Date.now() });
 
         return NextResponse.json({ images });
-
-    } catch (error) {
-        console.error('Error in GET /api/gallery:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-        return NextResponse.json({
-            error: errorMessage
-        }, { status: 500 });
+    } catch (error: unknown) {
+        return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
     }
 }
 
-// POST - Add new image to gallery
 export async function POST(request: NextRequest) {
     try {
-        validateEnvVars();
+        const body = await request.json() as { image?: Partial<ImageData> };
+        const image = body.image;
 
-        const body = await request.json();
-        const { image } = body;
+        if (!image?.url) return NextResponse.json({ error: 'URL required' }, { status: 400 });
 
-        if (!image || !image.url) {
-            return NextResponse.json(
-                { error: 'Image URL is required' },
-                { status: 400 }
-            );
-        }
+        const { images, sha } = await getGalleryData();
 
-        // ALWAYS fetch the latest content and SHA
-        const response = await fetch(
-            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
-            {
-                headers: getGithubHeaders(),
-                cache: 'no-store'
-            }
-        );
-
-        let sha: string | undefined;
-        let currentImages: ImageData[] = [];
-
-        if (response.ok) {
-            const file: GithubFile = await response.json();
-            sha = file.sha; // Get the LATEST SHA
-            const contentJson = JSON.parse(Buffer.from(file.content, 'base64').toString());
-            currentImages = contentJson.images || [];
-        } else if (response.status === 404) {
-            // File doesn't exist yet, create it
-            sha = undefined;
-        } else {
-            throw new Error(`GitHub API error: ${response.status}`);
-        }
-
-        // Add new image
         const newImage: ImageData = {
-            id: generateId(),
+            id: Date.now().toString(36) + Math.random().toString(36).substring(2),
             url: image.url,
-            title: image.title || '',
+            title: image.title || 'Untitled',
             description: image.description || '',
             category: image.category || 'general',
             tags: image.tags || [],
-            uploadedAt: new Date().toISOString()
+            uploadedAt: new Date().toISOString(),
         };
 
-        currentImages.push(newImage);
+        await updateGalleryData([...images, newImage], sha, `Add image: ${newImage.title}`);
 
-        // Update GitHub with the LATEST SHA
-        const updateResponse = await fetch(
-            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
-            {
-                method: 'PUT',
-                headers: getGithubHeaders(),
-                body: JSON.stringify({
-                    message: `Add new image: ${newImage.title || newImage.id}`,
-                    content: Buffer.from(JSON.stringify({ images: currentImages }, null, 2)).toString('base64'),
-                    sha: sha // Use the fresh SHA we just fetched
-                })
-            }
-        );
-
-        if (!updateResponse.ok) {
-            const errorData = await updateResponse.json();
-            throw new Error(errorData.message || 'Failed to update GitHub');
-        }
-
-        // Clear cache
-        galleryCache.delete('images');
-
-        return NextResponse.json({
-            success: true,
-            image: newImage
-        });
-
-    } catch (error) {
-        console.error('Error in POST /api/gallery:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-        return NextResponse.json({
-            error: errorMessage
-        }, { status: 500 });
+        return NextResponse.json({ success: true, image: newImage });
+    } catch (error: unknown) {
+        return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
     }
 }
 
-
-
 export async function PUT(request: NextRequest) {
     try {
-        validateEnvVars();
+        const body = await request.json() as { imageId?: string; imageData?: Partial<ImageData> };
+        const { imageId, imageData } = body;
 
-        const body = await request.json();
-        const { action, imageId, imageData } = body;
+        // FIX 2: validate both fields before hitting the DB
+        if (!imageId || !imageData) {
+            return NextResponse.json({ error: 'imageId and imageData are required' }, { status: 400 });
+        }
 
-        const response = await fetch(
-            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
-            {
-                headers: getGithubHeaders(),
-                cache: 'no-store'
-            }
+        const { images, sha } = await getGalleryData();
+
+        const index = images.findIndex(img => img.id === imageId);
+        if (index === -1) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+        // FIX 3: build a new array instead of mutating in place
+        const updatedImages = images.map((img, i) =>
+            i === index
+                ? { ...img, ...imageData, id: img.id, updatedAt: new Date().toISOString() }
+                : img
         );
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch current gallery data');
-        }
-
-        const file: GithubFile = await response.json();
-        const sha = file.sha;
-        const contentJson = JSON.parse(Buffer.from(file.content, 'base64').toString());
-        let images: ImageData[] = contentJson.images || [];
-
-        if (action === 'update') {
-            const imageIndex = images.findIndex((img: ImageData) => img.id === imageId);
-            if (imageIndex === -1) {
-                return NextResponse.json(
-                    { error: 'Image not found' },
-                    { status: 404 }
-                );
-            }
-
-            images[imageIndex] = {
-                ...images[imageIndex],
-                ...imageData,
-                updatedAt: new Date().toISOString()
-            };
-
-        } else if (action === 'delete') {
-            images = images.filter((img: ImageData) => img.id !== imageId);
-        } else {
-            return NextResponse.json(
-                { error: 'Invalid action' },
-                { status: 400 }
-            );
-        }
-
-        const updateResponse = await fetch(
-            `https://api.github.com/repos/${process.env.GITHUB_OWNER}/${process.env.GITHUB_REPO}/contents/content.json`,
-            {
-                method: 'PUT',
-                headers: getGithubHeaders(),
-                body: JSON.stringify({
-                    message: `${action === 'update' ? 'Update' : 'Delete'} image: ${imageId}`,
-                    content: Buffer.from(JSON.stringify({ images }, null, 2)).toString('base64'),
-                    sha: sha
-                })
-            }
-        );
-
-        if (!updateResponse.ok) {
-            const errorData = await updateResponse.json();
-            throw new Error(errorData.message || 'Failed to update GitHub');
-        }
-
-        galleryCache.delete('images');
-
+        await updateGalleryData(updatedImages, sha, `Update image: ${imageId}`);
         return NextResponse.json({ success: true });
-
-    } catch (error) {
-        console.error('Error in PUT /api/gallery:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-        return NextResponse.json({
-            error: errorMessage
-        }, { status: 500 });
+    } catch (error: unknown) {
+        return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
     }
 }
 
 export async function DELETE(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
-        const imageId = searchParams.get('id');
+        const id = searchParams.get('id');
 
-        if (!imageId) {
-            return NextResponse.json(
-                { error: 'Image ID is required' },
-                { status: 400 }
-            );
-        }
+        if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
-        return PUT(new Request(request.url, {
-            method: 'PUT',
-            headers: request.headers,
-            body: JSON.stringify({ action: 'delete', imageId })
-        }) as NextRequest);
+        const { images, sha } = await getGalleryData();
+        const filtered = images.filter(img => img.id !== id);
 
-    } catch (error) {
-        console.error('Error in DELETE /api/gallery:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-        return NextResponse.json({
-            error: errorMessage
-        }, { status: 500 });
+        await updateGalleryData(filtered, sha, `Delete image: ${id}`);
+        return NextResponse.json({ success: true });
+    } catch (error: unknown) {
+        return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
     }
 }

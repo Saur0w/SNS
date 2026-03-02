@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import styles from "./style.module.scss";
 import { CldImage } from "next-cloudinary";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 
-gsap.registerPlugin(useGSAP, ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger);
 
 interface ImageData {
     id: string;
@@ -15,7 +15,6 @@ interface ImageData {
     title: string;
     description: string;
     category: string;
-    tags: string[];
 }
 
 export default function Landing() {
@@ -25,32 +24,30 @@ export default function Landing() {
 
     const galleryRef = useRef<HTMLDivElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
-    const modalRef = useRef<HTMLDivElement>(null);
 
     const scrollState = useRef({
         current: 0,
         target: 0,
-        limit: 0
+        limit: 0,
     });
 
-    useEffect(() => {
-        loadGallery();
-    }, []);
-
-    const loadGallery = async (): Promise<void> => {
-        setIsLoading(true);
+    const loadGallery = useCallback(async (): Promise<void> => {
         try {
             const response = await fetch("/api/gallery");
             if (response.ok) {
-                const data = await response.json();
+                const data = await response.json() as { images: ImageData[] };
                 setImages(data.images || []);
             }
         } catch (error) {
-            console.error("Error loading gallery:", error);
+            console.error("Gallery failed to load", error);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        loadGallery();
+    }, [loadGallery]);
 
     useEffect(() => {
         const wrapper = wrapperRef.current;
@@ -61,84 +58,58 @@ export default function Landing() {
         };
 
         updateLimit();
-        window.addEventListener('resize', updateLimit);
+        window.addEventListener("resize", updateLimit);
 
-        const handleWheel = (evt: WheelEvent) => {
-            if (Math.abs(evt.deltaY) > Math.abs(evt.deltaX)) {
-                evt.preventDefault();
-                scrollState.current.target += evt.deltaY;
-            } else {
-                scrollState.current.target += evt.deltaX;
-            }
+        const handleWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            scrollState.current.target += (e.deltaY + e.deltaX) * 1.2;
         };
 
         wrapper.addEventListener("wheel", handleWheel, { passive: false });
 
         let rafId: number;
-        const lerp = (start: number, end: number, factor: number) => start + (end - start) * factor;
-
-        const animateScroll = () => {
+        const animate = () => {
             const state = scrollState.current;
-
             state.target = Math.max(0, Math.min(state.target, state.limit));
-
-            state.current = lerp(state.current, state.target, 0.08);
-
-            if (wrapper) {
-                wrapper.scrollLeft = state.current;
-            }
-
-            rafId = requestAnimationFrame(animateScroll);
+            state.current += (state.target - state.current) * 0.08;
+            wrapper.scrollLeft = state.current;
+            ScrollTrigger.update();
+            rafId = requestAnimationFrame(animate);
         };
 
-        rafId = requestAnimationFrame(animateScroll);
+        rafId = requestAnimationFrame(animate);
 
         return () => {
-            window.removeEventListener('resize', updateLimit);
+            window.removeEventListener("resize", updateLimit);
             wrapper.removeEventListener("wheel", handleWheel);
             cancelAnimationFrame(rafId);
         };
     }, [images, isLoading]);
 
     useGSAP(() => {
-        if (images.length > 0 && galleryRef.current) {
-            const cards = gsap.utils.toArray<HTMLElement>(`.${styles.card}`);
+        if (!images.length) return;
 
-            gsap.fromTo(cards,
-                { opacity: 0, scale: 0.8 },
-                {
-                    opacity: 1,
-                    scale: 1,
-                    duration: 0.5,
-                    stagger: {
-                        amount: 1,
-                        grid: "auto",
-                        from: "start"
-                    },
-                    ease: "power2.out",
-                    scrollTrigger: {
-                        trigger: galleryRef.current,
-                        horizontal: true,
-                        start: "left right",
-                        toggleActions: "play none none reverse"
-                    }
-                }
-            );
-        }
+        const cards = gsap.utils.toArray(`.${styles.card}`);
+
+        gsap.fromTo(
+            cards,
+            { opacity: 0, y: 50, scale: 0.9 },
+            {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.8,
+                stagger: 0.05,
+                ease: "expo.out",
+                scrollTrigger: {
+                    trigger: galleryRef.current,
+                    scroller: wrapperRef.current,
+                    horizontal: true,
+                    start: "left 90%",
+                },
+            }
+        );
     }, { dependencies: [images], scope: galleryRef });
-
-    useGSAP(() => {
-        if (selectedImage && modalRef.current) {
-            gsap.fromTo(modalRef.current,
-                { opacity: 0 },
-                { opacity: 1, duration: 0.4, ease: "power2.out" }
-            );
-            gsap.fromTo(".modalImage",
-                { scale: 0.9, y: 20 },
-                { scale: 1, y: 0, duration: 0.6, delay: 0.1, ease: "back.out(1.2)" }
-            );
-        }
-    }, [selectedImage]);
 
     return (
         <section className={styles.landing}>
@@ -150,58 +121,45 @@ export default function Landing() {
 
             <main className={styles.scrollWrapper} ref={wrapperRef}>
                 {isLoading ? (
-                    <div className={styles.loading}>
-                        <div className={styles.spinner}></div>
-                    </div>
+                    <div className={styles.loading}><div className={styles.spinner}></div></div>
                 ) : (
                     <div className={styles.gallery} ref={galleryRef}>
                         {images.map((image) => (
-                            <div
-                                key={image.id}
-                                className={styles.card}
-                                onClick={() => setSelectedImage(image)} // Open Modal
-                            >
+                            <div key={image.id} className={styles.card} onClick={() => setSelectedImage(image)}>
                                 <div className={styles.imageContainer}>
                                     <CldImage
                                         src={image.url}
-                                        alt={image.title || "Gallery Photo"}
-                                        width={400}
-                                        height={400}
+                                        alt={image.title}
+                                        width={500}
+                                        height={500}
                                         crop="fill"
                                         className={styles.photo}
-                                        quality="auto"
-                                        format="auto"
                                     />
                                 </div>
                                 <div className={styles.meta}>
-                                    <span className={styles.id}>View</span>
+                                    <span className={styles.id}>Open</span>
                                 </div>
                             </div>
                         ))}
-                        <div className={styles.spacer}></div>
                     </div>
                 )}
             </main>
 
             {selectedImage && (
-                <div className={styles.modal} ref={modalRef} onClick={() => setSelectedImage(null)}>
-                    <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-                        <button className={styles.closeBtn} onClick={() => setSelectedImage(null)}>×</button>
-
+                <div className={styles.modal} onClick={() => setSelectedImage(null)}>
+                    <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+                        <button className={styles.closeBtn} onClick={() => setSelectedImage(null)}>&times;</button>
                         <div className={styles.modalImageWrapper}>
                             <CldImage
                                 src={selectedImage.url}
                                 alt={selectedImage.title}
                                 width={1200}
-                                height={900}
-                                preserveTransformations
-                                className="modalImage"
+                                height={800}
                             />
                         </div>
-
                         <div className={styles.modalInfo}>
-                            <h2>{selectedImage.title || "Untitled"}</h2>
-                            <p>{selectedImage.category} — {selectedImage.description}</p>
+                            <h2>{selectedImage.title}</h2>
+                            <p>{selectedImage.description}</p>
                         </div>
                     </div>
                 </div>

@@ -1,37 +1,33 @@
 $bg-color: #f4f4f0;
-$text-main: #222;
-$card-size: 16vh;
+$text-main: #1a1a1a;
+$card-size: clamp(120px, 18vh, 180px);
 
 .landing {
   position: relative;
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
   background-color: $bg-color;
   overflow: hidden;
   color: $text-main;
-  font-family: 'Helvetica Neue', sans-serif;
-  padding-top: 50px;
 }
 
 .header {
   position: fixed;
-  top: 2rem;
-  left: 2rem;
-  z-index: 10;
+  top: 2.5rem;
+  left: 3rem;
+  z-index: 50;
   pointer-events: none;
 
   h1 {
-    font-size: 1.2rem;
-    font-weight: 600;
+    font-size: 0.8rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin: 0;
+    letter-spacing: 0.1em;
 
+    // FIX 1: restored missing count style
     .count {
-      color: #888;
-      font-weight: 400;
+      opacity: 0.4;
       margin-left: 0.5rem;
-      font-size: 0.9rem;
     }
   }
 }
@@ -39,89 +35,67 @@ $card-size: 16vh;
 .scrollWrapper {
   height: 100%;
   width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  cursor: grab;
   display: flex;
-  align-items: center;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-
-  &:active {
-    cursor: grabbing;
-  }
+  align-items: center; // FIX 2: center keeps grid from overflowing vertically
+  // FIX 2: padding clears the fixed header cleanly without margin-top hacks
+  padding-top: 5rem;
+  box-sizing: border-box;
+  // FIX 3: overflow stays hidden — JS smooth scroll owns scrollLeft entirely
+  overflow: hidden;
 }
 
 .gallery {
   display: grid;
   grid-template-rows: repeat(4, $card-size);
   grid-auto-flow: column;
-  gap: 4rem;
-
+  grid-auto-columns: $card-size;
+  gap: 1.5rem;
+  padding: 0 10vw 0 3rem;
   height: fit-content;
-  padding: 0 10vw;
-  width: max-content;
+  // REMOVED: margin-top: 8rem (replaced by padding-top on wrapper)
 }
 
 .card {
   position: relative;
-  width: $card-size;
-  height: $card-size;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease;
+  width: 100%;
+  height: 100%;
   cursor: pointer;
+  background: #e0e0dc;
+  overflow: hidden;
 
   &:hover {
-    z-index: 2;
-    transform: scale(0.96);
-
-    .photo {
-      filter: saturate(1.1);
-      transform: scale(1.05);
-    }
-
-    .meta {
-      opacity: 1;
-    }
+    .photo { transform: scale(1.1); }
+    .meta { opacity: 1; }
   }
 
   .imageContainer {
     width: 100%;
     height: 100%;
-    overflow: hidden;
-    background: #e5e5e5;
 
     .photo {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
-      transition: filter 0.4s ease, transform 0.6s ease;
+      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
   }
 
   .meta {
     position: absolute;
-    bottom: 0.8rem;
-    left: 0.8rem;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     opacity: 0;
     transition: opacity 0.3s ease;
-    pointer-events: none;
 
     .id {
-      background: rgba(0,0,0,0.8);
-      padding: 0.3rem 0.6rem;
-      font-size: 0.7rem;
-      font-family: monospace;
       color: white;
-      border-radius: 4px;
+      font-size: 0.6rem;
       text-transform: uppercase;
+      border: 1px solid white;
+      padding: 0.4rem 0.8rem;
     }
   }
 }
@@ -130,95 +104,62 @@ $card-size: 16vh;
   position: fixed;
   inset: 0;
   z-index: 100;
-  background-color: rgba(244, 244, 240, 0.85);
-  backdrop-filter: blur(10px);
+  background-color: rgba($bg-color, 0.95);
+  backdrop-filter: blur(15px);
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 150px 2rem 2rem;
 
   .modalContent {
+    width: 80vw;
+    max-height: 80vh;
     position: relative;
-    max-width: 90vw;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
   }
 
   .closeBtn {
     position: absolute;
-    top: -3rem;
+    top: -4rem;
     right: 0;
     background: none;
     border: none;
-    font-size: 2.5rem;
-    line-height: 1;
+    font-size: 2rem;
     cursor: pointer;
     color: $text-main;
-    opacity: 0.6;
-    transition: opacity 0.3s;
-
-    &:hover {
-      opacity: 1;
-    }
+    line-height: 1;
   }
 
   .modalImageWrapper {
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-    max-height: 70vh;
+    width: 100%;
+    height: 60vh;
 
     img {
-      max-width: 100%;
-      max-height: 70vh;
-      width: auto;
-      height: auto;
+      width: 100%;
+      height: 100%;
       object-fit: contain;
-      display: block;
     }
   }
 
   .modalInfo {
+    margin-top: 2rem;
     text-align: center;
-
-    h2 {
-      font-size: 1.5rem;
-      font-weight: 500;
-      margin: 0 0 0.5rem 0;
-    }
-
-    p {
-      color: #666;
-      font-size: 0.9rem;
-      margin: 0;
-    }
+    h2 { font-size: 2rem; margin-bottom: 0.5rem; }
+    p { opacity: 0.6; }
   }
 }
 
 .loading {
-  height: 100vh;
-  width: 100vw;
+  width: 100%;
   display: flex;
   justify-content: center;
-  align-items: center;
-
-  .spinner {
-    width: 30px;
-    height: 30px;
-    border: 2px solid #ccc;
-    border-top-color: #333;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #000;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-.spacer {
-  width: 10vw;
-}
+@keyframes spin { to { transform: rotate(360deg); } }
