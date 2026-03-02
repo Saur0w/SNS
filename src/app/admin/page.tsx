@@ -28,7 +28,6 @@ interface CloudinaryInfo {
     [key: string]: unknown;
 }
 
-// FIX 3: single source of truth for empty form
 const EMPTY_FORM: FormDataState = {
     url: '',
     title: '',
@@ -43,7 +42,6 @@ export default function GalleryAdmin() {
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [editingImageId, setEditingImageId] = useState<string | null>(null);
-    // FIX 2: uploadError now rendered in JSX below
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [formData, setFormData] = useState<FormDataState>(EMPTY_FORM);
 
@@ -96,7 +94,6 @@ export default function GalleryAdmin() {
         }
     };
 
-    // FIX 3: one shared cancel/reset so both Cancel and post-save are consistent
     const cancelEditing = (): void => {
         setIsEditing(false);
         setEditingImageId(null);
@@ -127,7 +124,7 @@ export default function GalleryAdmin() {
                 const err = await response.json() as { error?: string };
                 alert(err.error || "Failed to save");
             }
-        } catch { // FIX 1: bare catch — error was declared but never used
+        } catch {
             alert("Network error occurred");
         } finally {
             setIsSaving(false);
@@ -140,7 +137,7 @@ export default function GalleryAdmin() {
         try {
             const response = await fetch(`/api/gallery?id=${id}`, { method: 'DELETE' });
             if (response.ok) await loadImages();
-        } catch { // FIX 1: bare catch — error was declared but never used
+        } catch {
             alert("Delete failed");
         } finally {
             setIsSaving(false);
@@ -188,11 +185,9 @@ export default function GalleryAdmin() {
                             <form onSubmit={saveImage} className={styles.form}>
                                 <div className={styles.editorTop}>
                                     <h2>{editingImageId ? 'Edit Entry' : 'New Entry'}</h2>
-                                    {/* FIX 3: uses cancelEditing instead of bare setIsEditing */}
                                     <button type="button" className={styles.cancelBtn} onClick={cancelEditing}>Cancel</button>
                                 </div>
 
-                                {/* FIX 2: uploadError is now actually rendered */}
                                 {uploadError && (
                                     <p className={styles.uploadError}>{uploadError}</p>
                                 )}

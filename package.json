@@ -10,11 +10,6 @@
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
-    "@octokit/rest": "^22.0.0",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.4.2",
-    "@studio-freight/lenis": "^1.0.42",
-    "@types/three": "^0.182.0",
     "cloudinary": "^2.7.0",
     "geist": "^1.5.1",
     "gsap": "^3.13.0",
@@ -23,8 +18,7 @@
     "next-cloudinary": "^6.17.5",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "sass": "^1.93.0",
-    "three": "^0.180.0"
+    "sass": "^1.93.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
